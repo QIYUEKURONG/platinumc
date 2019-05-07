@@ -41,17 +41,18 @@ func checkCommandLineArguments(t *platinumc.Task) bool {
 	return true
 }
 
-// ConfirmIpAndPort find error
-func ConfirmIpAndPort(ip string, port int) bool {
-
-	var num int
+// confirmIpAndPort find error
+func confirmIPAndPort(ip string, port int) bool {
 	count := strings.Count(ip, ".")
 	if count != 3 {
 		return false
 	} else {
 		mess := strings.Split(ip, ".")
 		for _, data := range mess {
-			num, _ := strconv.Atoi(data)
+			num, err := strconv.Atoi(data)
+			if err != nil {
+				return false
+			}
 			if num < 0 || num > 255 {
 				return false
 			}
@@ -65,7 +66,8 @@ func ConfirmIpAndPort(ip string, port int) bool {
 	return true
 }
 
-func ParseServerIpAndPort(t *platinumc.Task) bool {
+// ParseServerIPAndPort can get ip and port in right range
+func ParseServerIPAndPort(t *platinumc.Task) bool {
 
 	index := strings.Index(t.ServerAddress, ":")
 	var ip string
@@ -81,7 +83,7 @@ func ParseServerIpAndPort(t *platinumc.Task) bool {
 			fmt.Println("sorry! server port convert error", ip, port)
 			return false
 		}
-		if !ConfirmIpAndPort(ip, port) {
+		if !confirmIPAndPort(ip, port) {
 			return false
 		}
 	}
@@ -89,17 +91,28 @@ func ParseServerIpAndPort(t *platinumc.Task) bool {
 }
 
 func main() {
-	task := platinumc.Task{}
-	parseCommandLineArguemtns(&task)
-	if !checkCommandLineArguments(&task) {
-		flag.PrintDefaults()
-		return
-	}
-	if !ParseServerIpAndPort(&task) {
-		fmt.Println("Use error : sorry! your ip and port find error ")
-		return
-	}
+	/* 	task := platinumc.Task{}
+	   	parseCommandLineArguemtns(&task)
+	   	if !checkCommandLineArguments(&task) {
+	   		flag.PrintDefaults()
+	   		return
+	   	}
+	   	if !ParseServerIPAndPort(&task) {
+	   		fmt.Println("Use error : sorry! your ip and port find error ")
+	   		return
+	   	}
 
-	platinumc.Run(&task)
+	   	platinumc.Run(&task) */
+
+	str := "255.0.fsa4.1"
+	port := 9022
+	result := confirmIPAndPort(str, port)
+	if result {
+		fmt.Println("ok")
+
+	} else {
+
+		fmt.Println("sorry")
+	}
 
 }

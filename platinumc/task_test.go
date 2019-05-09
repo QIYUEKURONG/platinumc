@@ -2,41 +2,33 @@ package platinumc
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"os"
 	"testing"
 )
 
-func confirmIPAndPort(ip string, port int) bool {
-	count := strings.Count(ip, ".")
-	if count < 3 || count > 3 {
-		return false
-	} else {
-		mess := strings.Split(ip, ".")
-		for _, data := range mess {
-			num, _ := strconv.Atoi(data)
-			if num < 0 || num > 255 {
-				return false
-			}
+func JSONSer(message *BlockRequest) ([]byte, error) {
+	/*
+		message.MclientID = "001"
+		message.MclientType = 4
+		message.MfileIndex = "./index"
+		message.MfileOffset = 0
+		message.Head.MprotocolVersion = 1
+		message.Head.McommandID = 002
+		num := (int)(len(message.MclientID) + len(message.MfileIndex))
+		message.Head.MbodyLength = (int16)(1 + 4 + num + 4 + 8)
 
-		}
-	}
-	if port < 0 || port > 65535 {
-		return false
-	}
-
-	return true
+		data, err := json.Marshal(message)
+		return data, err*/
+	return nil, nil
 }
+
 func TestCheckTask(t *testing.T) {
+	var message BlockRequest
 
-	str := "255.0.0.1"
-	port := 6600
-	result := confirmIPAndPort(str, port)
-	if result {
-		fmt.Println("ok")
-
-	} else {
-
-		fmt.Println("sorry")
+	data, err := JSONSer(&message)
+	if err != nil {
+		os.Exit(-1)
 	}
+	fmt.Println(data)
+
 }

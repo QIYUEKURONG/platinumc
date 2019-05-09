@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"strconv"
@@ -73,14 +75,14 @@ func ParseServerIPAndPort(t *platinumc.Task) bool {
 	var ip string
 
 	if index == -1 {
-		fmt.Println("sorry! server ip or port find error,please try again")
+		fmt.Println(" Use error:  sorry! server ip or port find error,please try again")
 		return false
 	} else {
 		//分析格式
 		ip = t.ServerAddress[0:index]
 		port, err := strconv.Atoi(t.ServerAddress[index+1 : len(t.ServerAddress)-1])
 		if err != nil {
-			fmt.Println("sorry! server port convert error", ip, port)
+			fmt.Println("Use error:  sorry! server port convert error", ip, port)
 			return false
 		}
 		if !confirmIPAndPort(ip, port) {
@@ -90,29 +92,49 @@ func ParseServerIPAndPort(t *platinumc.Task) bool {
 	return true
 }
 
+type Mess struct {
+	Name uint16
+	Age  uint16
+	sex  string
+}
+
 func main() {
-	/* 	task := platinumc.Task{}
-	   	parseCommandLineArguemtns(&task)
-	   	if !checkCommandLineArguments(&task) {
-	   		flag.PrintDefaults()
-	   		return
-	   	}
-	   	if !ParseServerIPAndPort(&task) {
-	   		fmt.Println("Use error : sorry! your ip and port find error ")
-	   		return
-	   	}
-
-	   	platinumc.Run(&task) */
-
-	str := "255.0.fsa4.1"
-	port := 9022
-	result := confirmIPAndPort(str, port)
-	if result {
-		fmt.Println("ok")
-
-	} else {
-
-		fmt.Println("sorry")
+	/* task := platinumc.Task{}
+	parseCommandLineArguemtns(&task)
+	if !checkCommandLineArguments(&task) {
+		flag.PrintDefaults()
+		return
 	}
+	if !ParseServerIPAndPort(&task) {
+		fmt.Println("Use error : sorry! your ip and port find error ")
+		return
+	}
+
+	platinumc.Run(&task) */
+
+	msg := platinumc.BlockRequest{}
+	msg.Head.ProtocolVersion = 52
+	msg.Head.CommandID = 1
+	msg.Head.BodyLength = 30
+	msg.ClientType = 2
+	msg.ClientID = "id"
+	msg.FileIndex = "1.mp4"
+	msg.FileOffset = 234283
+
+	buf, _ := platinumc.SerializateBinary(&msg)
+	//	assert.Nil(err)
+	buff := bytes.NewBuffer(buf)
+	fmt.Println("buf value", buf)
+	fmt.Println(buff.Bytes())
+	value := make([]byte, 10)
+	err := binary.Read(buff, binary.BigEndian, &value)
+	fmt.Println(buff.Bytes())
+	if err != nil {
+		fmt.Println("find error")
+	}
+	fmt.Printf("%s ", value)
+	val := string(value)
+	fmt.Println(val)
+	fmt.Println(buff.Bytes())
 
 }

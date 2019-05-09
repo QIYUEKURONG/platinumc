@@ -1,10 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"encoding/binary"
 	"flag"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -99,7 +98,7 @@ type Mess struct {
 }
 
 func main() {
-	/* task := platinumc.Task{}
+	/*  task := platinumc.Task{}
 	parseCommandLineArguemtns(&task)
 	if !checkCommandLineArguments(&task) {
 		flag.PrintDefaults()
@@ -109,32 +108,12 @@ func main() {
 		fmt.Println("Use error : sorry! your ip and port find error ")
 		return
 	}
-
-	platinumc.Run(&task) */
-
-	msg := platinumc.BlockRequest{}
-	msg.Head.ProtocolVersion = 52
-	msg.Head.CommandID = 1
-	msg.Head.BodyLength = 30
-	msg.ClientType = 2
-	msg.ClientID = "id"
-	msg.FileIndex = "1.mp4"
-	msg.FileOffset = 234283
-
-	buf, _ := platinumc.SerializateBinary(&msg)
-	//	assert.Nil(err)
-	buff := bytes.NewBuffer(buf)
-	fmt.Println("buf value", buf)
-	fmt.Println(buff.Bytes())
-	value := make([]byte, 10)
-	err := binary.Read(buff, binary.BigEndian, &value)
-	fmt.Println(buff.Bytes())
+	platinumc.Run(&task)*/
+	file, err := os.OpenFile("filename", os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
-		fmt.Println("find error")
+		fmt.Println("sorry file create error")
+		os.Exit(-1)
 	}
-	fmt.Printf("%s ", value)
-	val := string(value)
-	fmt.Println(val)
-	fmt.Println(buff.Bytes())
+	defer file.Close()
 
 }

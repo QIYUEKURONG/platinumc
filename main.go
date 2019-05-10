@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
 	"github.com/QIYUEKURONG/platinumc/platinumc"
+
 )
 
 func parseCommandLineArguemtns(t *platinumc.Task) {
@@ -91,14 +91,8 @@ func ParseServerIPAndPort(t *platinumc.Task) bool {
 	return true
 }
 
-type Mess struct {
-	Name uint16
-	Age  uint16
-	sex  string
-}
-
 func main() {
-	/*  task := platinumc.Task{}
+	task := platinumc.Task{}
 	parseCommandLineArguemtns(&task)
 	if !checkCommandLineArguments(&task) {
 		flag.PrintDefaults()
@@ -108,12 +102,5 @@ func main() {
 		fmt.Println("Use error : sorry! your ip and port find error ")
 		return
 	}
-	platinumc.Run(&task)*/
-	file, err := os.OpenFile("filename", os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		fmt.Println("sorry file create error")
-		os.Exit(-1)
-	}
-	defer file.Close()
-
+	platinumc.Run(&task)
 }

@@ -42,6 +42,9 @@ func TestBinaryEncode(t *testing.T) {
 	if length != len(buf) {
 		t.Errorf("length should be: %v\n", length)
 	}
+
+	assert.Equal(len(buf), msg.Length(), "")
+
 	//fmt.Println(buf[])
 	assert.Equal(buf[0], byte(1), "first byte should be 1")
 	assert.Equal(buf[1], byte(1), "second byte should be 1")

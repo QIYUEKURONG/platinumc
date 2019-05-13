@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/QIYUEKURONG/platinumc/platinumc"
-
+	"github.com/QIYUEKURONG/platinumc/platinumc/client"
 )
 
 func parseCommandLineArguemtns(t *platinumc.Task) {
@@ -68,7 +68,7 @@ func confirmIPAndPort(ip string, port int) bool {
 }
 
 // ParseServerIPAndPort can get ip and port in right range
-func ParseServerIPAndPort(t *platinumc.Task) bool {
+func ParseServerIPAndPort(t platinumc.Task) bool {
 
 	index := strings.Index(t.ServerAddress, ":")
 	var ip string
@@ -98,9 +98,11 @@ func main() {
 		flag.PrintDefaults()
 		return
 	}
-	if !ParseServerIPAndPort(&task) {
+	if !ParseServerIPAndPort(task) {
 		fmt.Println("Use error : sorry! your ip and port find error ")
 		return
 	}
-	platinumc.Run(&task)
+	fmt.Println(task)
+	client.Run(&task)
+
 }

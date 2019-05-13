@@ -17,16 +17,14 @@ type BlockRequest struct {
 }
 
 // NewObject can create a new object
-func (br *BlockRequest) NewObject(task *platinumc.Task) *BlockRequest {
-	message := new(BlockRequest)
+func (br *BlockRequest) NewObject(task *platinumc.Task, message *BlockRequest) {
 	message.ClientID = "001"
 	message.ClientType = ClientTypeWindows
 	message.FileIndex = task.FileIndex
 	message.FileOffset = (uint64)(task.BlockIndex)
 	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 002
+	message.Head.CommandID = 0x30
 	message.Head.BodyLength = br.GetBodyLength(*message)
-	return message
 }
 
 // GetBodyLength get body length

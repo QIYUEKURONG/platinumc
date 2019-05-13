@@ -1,18 +1,17 @@
-package platinumc
+package client
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"testing"
 
+	"github.com/QIYUEKURONG/platinumc/platinumc/protocol"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestBinaryEncode(t *testing.T) {
 	assert := assert.New(t)
 
-	msg := BlockRequest{}
+	msg := protocol.BlockRequest{}
 	msg.Head.ProtocolVersion = 1
 	msg.Head.CommandID = 1
 	msg.Head.BodyLength = 30
@@ -21,7 +20,7 @@ func TestBinaryEncode(t *testing.T) {
 	msg.FileIndex = "1.mp4"
 	msg.FileOffset = 234283
 
-	buf, err := SerializateBinary(&msg)
+	buf, err := msg.EncodeBody(&msg)
 	assert.Nil(err)
 
 	//fmt.Println(buf)
@@ -29,11 +28,11 @@ func TestBinaryEncode(t *testing.T) {
 
 	length := 0
 	// Head length
-	length += 1 // uint8 1 byte ProtocolVersion
-	length += 1 // uint8 1 byte CommandID
+	length++    // uint8 1 byte ProtocolVersion
+	length++    // uint8 1 byte CommandID
 	length += 2 // uint16 2 bytes BodyLength
 	// Body length
-	length += 1                     // uint8 1 byte ClientType
+	length++                        // uint8 1 byte ClientType
 	length += 4 + len(msg.ClientID) // uint32 + len(str)   4+len(str) bytes  ClientID
 	length += 4 + len(msg.FileIndex)
 	length += 8
@@ -43,7 +42,7 @@ func TestBinaryEncode(t *testing.T) {
 		t.Errorf("length should be: %v\n", length)
 	}
 
-	assert.Equal(len(buf), msg.Length(), "")
+	assert.Equal(len(buf), msg.GetBodyLength(msg), "")
 
 	//fmt.Println(buf[])
 	assert.Equal(buf[0], byte(1), "first byte should be 1")
@@ -63,24 +62,29 @@ func TestBinaryEncode(t *testing.T) {
 		if buf[0] != 1 {
 		}*/
 }
-
-func TestBinaryDecode(t *testing.T) {
-	msg := BlockRequest{}
-	msg.Head.ProtocolVersion = 1
-	msg.Head.CommandID = 1
-	msg.Head.BodyLength = 30
-	msg.ClientType = 2
-	msg.ClientID = "id"
-	msg.FileIndex = "1.mp4"
-	msg.FileOffset = 234283
-
-	buf, _ := SerializateBinary(&msg)
-	//	assert.Nil(err)
-	fmt.Println("buf value", buf)
-	var str uint8
-	buff := bytes.NewBuffer(buf)
-	binary.Read(buff, binary.BigEndian, &str)
-	fmt.Println(str)
-	fmt.Println("buf value", buf)
-
+func TestLength(t *testing.T) {
+	assert := assert.New(t)
+	buff := make([]byte, 4)
+	buff[0] = 01
+	buff[1] = 12
+	buff[2] = 00
+	buff[3] = 15
+	leng, err1 := GetBodyLength(buff)
+	assert.Nil(err1)
+	if leng == 15 {
+		fmt.Println("OK")
+	}
+}
+func TestCommandType(t *testing.T) {
+	assert := assert.New(t)
+	buff := make([]byte, 4)
+	buff[0] = 01
+	buff[1] = 12
+	buff[2] = 00
+	buff[3] = 15
+	len, err := GetCommandType(buff)
+	assert.Nil(err)
+	if len == (uint8)(12) {
+		fmt.Println("testing passing")
+	}
 }

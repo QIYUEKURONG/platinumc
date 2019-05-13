@@ -12,13 +12,11 @@ type CommandFin struct {
 }
 
 //NewObject can create a new object
-func (f *CommandFin) NewObject() *CommandFin {
-	message := new(CommandFin)
+func (f *CommandFin) NewObject(message *CommandFin) {
 	message.Head.ProtocolVersion = ProtocolVersion
 	message.Head.CommandID = 002
 	message.Head.BodyLength = f.GetBodyLength()
 	message.ErrorCode = 0
-	return message
 }
 
 //GetBodyLength get body length

@@ -14,13 +14,11 @@ type PieceRequest struct {
 }
 
 //NewObject can create a new object
-func (p *PieceRequest) NewObject(task *platinumc.Task) *PieceRequest {
-	message := new(PieceRequest)
+func (p *PieceRequest) NewObject(task *platinumc.Task, message *PieceRequest) {
 	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 002
+	message.Head.CommandID = 0x32
 	message.Head.BodyLength = p.GetBodyLength()
 	message.PiecenIndex = (uint32)(task.StartPieceIndex)
-	return message
 }
 
 // GetBodyLength can return value of bodylength

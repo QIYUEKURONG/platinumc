@@ -17,15 +17,14 @@ type BlockResponse struct {
 }
 
 // NewObject can create a new object
-func (b *BlockResponse) NewObject(task *platinumc.Task) *BlockResponse {
-	message := new(BlockResponse)
+func (b *BlockResponse) NewObject(task *platinumc.Task, message *BlockResponse) {
 	message.Head.ProtocolVersion = ProtocolVersion
 	message.Head.CommandID = 002
 	message.Head.BodyLength = b.GetBodyLength(*message)
 	message.FileIndex = task.FileIndex
 	message.FileOffset = (uint64)(task.BlockIndex)
 	message.FilelastModified = 0
-	return message
+
 }
 
 // GetBodyLength get body length

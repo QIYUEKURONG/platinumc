@@ -12,13 +12,12 @@ type PingReply struct {
 }
 
 //NewObject can create a new object
-func (p *PingReply) NewObject(timestamp uint64) *PingReply {
-	message := new(PingReply)
+func (p *PingReply) NewObject(timestamp uint64, message *PingReply) {
 	message.Head.ProtocolVersion = ProtocolVersion
 	message.Head.CommandID = 0x06
 	message.Head.BodyLength = p.GetBodyLength()
 	message.TimeStamp = timestamp
-	return message
+
 }
 
 // GetBodyLength get body length

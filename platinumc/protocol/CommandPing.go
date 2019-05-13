@@ -12,13 +12,11 @@ type CommandPing struct {
 }
 
 //NewObject can create a new object
-func (p *CommandPing) NewObject(timestamp uint64) *CommandPing {
-	message := new(CommandPing)
+func (p *CommandPing) NewObject(timestamp uint64, message *CommandPing) {
 	message.Head.ProtocolVersion = ProtocolVersion
 	message.Head.CommandID = 0x05
 	message.Head.BodyLength = p.GetBodyLength()
 	message.TimeStamp = timestamp
-	return message
 }
 
 // GetBodyLength get body length

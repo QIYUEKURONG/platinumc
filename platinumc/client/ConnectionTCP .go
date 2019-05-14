@@ -22,26 +22,31 @@ type ConnectionTCP struct {
 	// ReceiveBuffer record receive buff
 	ReceiveBuffer []byte
 	ServerAddress string
+
+	Task *platinumc.Task
 }
 
-// NewObject function can set value for ConnectionTCP struct object
-func (c *ConnectionTCP) NewObject(t *platinumc.Task, object *ConnectionTCP) error {
+// NewConnectionTCP function can set value for ConnectionTCP struct object
+func NewConnectionTCP(t *platinumc.Task) *ConnectionTCP {
 	index := strings.Index(t.ServerAddress, ":")
-	object.IP = t.ServerAddress[0:index]
-	Port := t.ServerAddress[index+1 : len(t.ServerAddress)-1]
-	value, err := strconv.Atoi(Port)
-	if err != nil {
-		fmt.Println("ConnectionTCP'S  NewObject convert string to int error")
-		return err
+	ip := t.ServerAddress[0:index]
+	value := t.ServerAddress[index+1 : len(t.ServerAddress)-1]
+	port, _ := (strconv.Atoi(value))
+	ports := (uint16)(port)
+	br := &ConnectionTCP{
+		IP:            ip,
+		Port:          ports,
+		ServerAddress: t.ServerAddress,
+		Task:          t,
 	}
-	object.Port = (uint16)(value)
-	object.ServerAddress = t.ServerAddress
-	return nil
+	return br
 }
 
 // Connect to create a link and return a net.conn and error
-func (c *ConnectionTCP) Connect(co *ConnectionTCP) (net.Conn, error) {
-	fmt.Println(co.ServerAddress)
-	Conn, err := net.Dial("tcp", co.ServerAddress)
-	return Conn, err
+func (c *ConnectionTCP) Connect() (net.Conn, error) {
+	conn, err := net.Dial("tcp", c.ServerAddress)
+	if err != nil {
+		return nil, fmt.Errorf("connect err:%v", err)
+	}
+	return conn, err
 }

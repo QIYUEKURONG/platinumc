@@ -20,7 +20,7 @@ func TestBinaryEncode(t *testing.T) {
 	msg.FileIndex = "1.mp4"
 	msg.FileOffset = 234283
 
-	buf, err := msg.EncodeBody(&msg)
+	buf, err := msg.Encode()
 	assert.Nil(err)
 
 	//fmt.Println(buf)

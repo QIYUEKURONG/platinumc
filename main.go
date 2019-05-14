@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"strconv"
@@ -91,6 +93,12 @@ func ParseServerIPAndPort(t platinumc.Task) bool {
 	return true
 }
 
+func changs(buff *[]byte) {
+	buf := bytes.NewBuffer(*buff)
+	var value byte
+	binary.Read(buf, binary.BigEndian, &value)
+
+}
 func main() {
 	task := platinumc.Task{}
 	parseCommandLineArguemtns(&task)

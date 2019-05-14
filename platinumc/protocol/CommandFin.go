@@ -11,12 +11,15 @@ type CommandFin struct {
 	ErrorCode uint8
 }
 
-//NewObject can create a new object
-func (f *CommandFin) NewObject(message *CommandFin) {
-	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 002
-	message.Head.BodyLength = f.GetBodyLength()
-	message.ErrorCode = 0
+//NewFinObject can create a new object
+func NewFinObject() *CommandFin {
+	br := &CommandFin{
+		ErrorCode: 0,
+	}
+	br.Head.ProtocolVersion = ProtocolVersion
+	br.Head.CommandID = CommandFin1
+	br.Head.BodyLength = br.GetBodyLength()
+	return br
 }
 
 //GetBodyLength get body length
@@ -25,22 +28,22 @@ func (f *CommandFin) GetBodyLength() uint16 {
 }
 
 // EncodeBody can encode client message to binary
-func (f *CommandFin) EncodeBody(message *CommandFin) ([]byte, error) {
+func (f *CommandFin) EncodeBody() ([]byte, error) {
 	buff := new(bytes.Buffer)
 	var err error
-	err = binary.Write(buff, binary.BigEndian, message.Head.ProtocolVersion)
+	err = binary.Write(buff, binary.BigEndian, f.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.CommandID)
+	err = binary.Write(buff, binary.BigEndian, f.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.BodyLength)
+	err = binary.Write(buff, binary.BigEndian, f.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.ErrorCode)
+	err = binary.Write(buff, binary.BigEndian, f.ErrorCode)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +51,11 @@ func (f *CommandFin) EncodeBody(message *CommandFin) ([]byte, error) {
 }
 
 // DecodeBody can decode binary code to struct
-func (f *CommandFin) DecodeBody(buf []byte) (CommandFin, error) {
-	buff := bytes.NewBuffer(buf)
-	var data CommandFin
+func (f *CommandFin) DecodeBody(buff *bytes.Buffer) (*CommandFin, error) {
+
+	data := NewFinObject()
+	//buff := bytes.NewBuffer(buf)
+
 	var err error
 	err = binary.Read(buff, binary.BigEndian, &data.Head.ProtocolVersion)
 	if err != nil {

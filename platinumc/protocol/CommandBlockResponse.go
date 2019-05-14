@@ -3,8 +3,6 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-
-	"github.com/QIYUEKURONG/platinumc/platinumc"
 )
 
 // BlockResponse receive message from server
@@ -16,51 +14,46 @@ type BlockResponse struct {
 	FilelastModified uint64
 }
 
-// NewObject can create a new object
-func (b *BlockResponse) NewObject(task *platinumc.Task, message *BlockResponse) {
-	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 002
-	message.Head.BodyLength = b.GetBodyLength(*message)
-	message.FileIndex = task.FileIndex
-	message.FileOffset = (uint64)(task.BlockIndex)
-	message.FilelastModified = 0
-
+// NewBlockResponse can create a new object
+func NewBlockResponse() *BlockResponse {
+	br := &BlockResponse{}
+	return br
 }
 
 // GetBodyLength get body length
-func (b *BlockResponse) GetBodyLength(mess BlockResponse) uint16 {
-	return (uint16)(4 + len(([]rune)(mess.FileIndex)) + 8 + 8 + 8)
+func (b *BlockResponse) GetBodyLength() uint16 {
+	return (uint16)(4 + len(([]rune)(b.FileIndex)) + 8 + 8 + 8)
 }
 
-// EncodeBody can encode client message to binary
-func (b *BlockResponse) EncodeBody(message *BlockResponse) ([]byte, error) {
+// Encode can encode client message to binary
+func (b *BlockResponse) Encode() ([]byte, error) {
 	buf := new(bytes.Buffer) // bytes.Buffer是一个缓冲byte类型的缓冲器
 	var err error
-	err = binary.Write(buf, binary.BigEndian, message.Head.ProtocolVersion)
+	err = binary.Write(buf, binary.BigEndian, b.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, message.Head.CommandID)
+	err = binary.Write(buf, binary.BigEndian, b.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, message.Head.BodyLength)
+	err = binary.Write(buf, binary.BigEndian, b.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, ([]byte)(message.FileIndex))
+	err = binary.Write(buf, binary.BigEndian, ([]byte)(b.FileIndex))
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, message.FileOffset)
+	err = binary.Write(buf, binary.BigEndian, b.FileOffset)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, message.FileSize)
+	err = binary.Write(buf, binary.BigEndian, b.FileSize)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buf, binary.BigEndian, message.FilelastModified)
+	err = binary.Write(buf, binary.BigEndian, b.FilelastModified)
 	if err != nil {
 		return nil, err
 	}
@@ -68,44 +61,48 @@ func (b *BlockResponse) EncodeBody(message *BlockResponse) ([]byte, error) {
 }
 
 // DecodeBody can decode binary code to struct
-func (b *BlockResponse) DecodeBody(buf []byte) (BlockResponse, error) {
-	var block BlockResponse
+func (b *BlockResponse) DecodeBody(buff *bytes.Buffer) (*BlockResponse, error) {
 
-	// read head
-	buff := bytes.NewBuffer(buf)
-	err := binary.Read(buff, binary.BigEndian, &block.Head.ProtocolVersion)
+	b = NewBlockResponse()
+	//buff := bytes.NewBuffer(buf)
+	err := binary.Read(buff, binary.BigEndian, &b.Head.ProtocolVersion)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &block.Head.CommandID)
+	err = binary.Read(buff, binary.BigEndian, &b.Head.CommandID)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &block.Head.BodyLength)
+	err = binary.Read(buff, binary.BigEndian, &b.Head.BodyLength)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
 	//read body
 	var fileindexlen uint32
 	err = binary.Read(buff, binary.BigEndian, &fileindexlen)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
 	valueindex := make([]byte, fileindexlen)
 	err = binary.Read(buff, binary.BigEndian, &valueindex)
-	block.FileIndex = string(valueindex)
+	b.FileIndex = string(valueindex)
 
-	err = binary.Read(buff, binary.BigEndian, &block.FileOffset)
+	err = binary.Read(buff, binary.BigEndian, &b.FileOffset)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &block.FileSize)
+	err = binary.Read(buff, binary.BigEndian, &b.FileSize)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &block.FilelastModified)
+	err = binary.Read(buff, binary.BigEndian, &b.FilelastModified)
 	if err != nil {
-		return block, err
+		return nil, err
 	}
-	return block, nil
+	var value uint8
+	err = binary.Read(buff, binary.BigEndian, &value)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }

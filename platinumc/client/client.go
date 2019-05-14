@@ -22,8 +22,8 @@ func GetBodyLength(buff []byte) (uint16, error) {
 	return bodylength, err
 }
 
-// GetCommandType function get  object type
-func GetCommandType(buff []byte) (uint8, error) {
+// GetCommandID function get  object type
+func GetCommandID(buff []byte) (uint8, error) {
 	commandid := buff[1:2]
 	id := bytes.NewBuffer(commandid)
 	var commandtype uint8
@@ -31,77 +31,103 @@ func GetCommandType(buff []byte) (uint8, error) {
 	return commandtype, err
 }
 
+// SendBlockRequest encode and send BlockRequest to server.
+func SendBlockRequest(task *platinumc.Task, conn net.Conn) error {
+	// 1. 构造
+	br := protocol.NewBlockRequest(task.Identifier, protocol.ClientTypeUnknown, task.FileIndex, 0)
+	// 2. 编码
+	sendBuffer, err := br.Encode()
+	if err != nil {
+		return fmt.Errorf("encode failed: %v", err)
+	}
+	// 3. 发送
+	_, err = conn.Write(sendBuffer)
+	if err != nil {
+		return fmt.Errorf("send failed: %v", err)
+	}
+	fmt.Printf("[C2S BlockRequest] FileIndex:%s ClientId:tcp-%s FileOffset:%v\n", br.FileIndex, br.ClientID, br.FileOffset)
+	return nil
+}
+
+// SendPieceRequest encode and send PieceRequest to server.
+func SendPieceRequest(t *platinumc.Task, index uint32, conn net.Conn) error {
+	// 1: 构造
+	br := protocol.NewPieceRequest(t, index)
+	//fmt.Println("br value ", br)
+	// 2：编码
+	sendBuffer, err := br.Encode()
+	if err != nil {
+		return fmt.Errorf("encode failed: %v", err)
+	}
+	//fmt.Println(sendBuffer)
+	// 3:发送
+	_, err = conn.Write(sendBuffer)
+	if err != nil {
+		return fmt.Errorf("send failed: %v", err)
+	}
+	fmt.Printf("[C2S PieceRequest] Index:%v Offset:%v Length:%v\n", index, br.PiecenIndex, 8192)
+	return nil
+}
+
 // Run the client to download file specefied in task.
 func Run(task *platinumc.Task) {
-	tcplink := new(ConnectionTCP)
-	var err error
-	err = tcplink.NewObject(task, tcplink)
-	fmt.Println("tcplink ", tcplink)
+	// 1. 创建应用层连接，负责处理消息编解
+	c := NewConnectionTCP(task)
+	conn, err := c.Connect()
 	if err != nil {
-		fmt.Println("tcplink object create error")
+		fmt.Println("call Connect failed: %v\n", err)
 		os.Exit(-1)
 	}
-	var conn net.Conn
-	conn, err = tcplink.Connect(tcplink)
+	err = SendBlockRequest(task, conn)
 	if err != nil {
-		fmt.Println("sorry! Connect server error")
-		os.Exit(-1)
+		fmt.Printf("call SendBlockRequest failed: %v\n", err)
+		os.Exit(1)
 	}
-	// 先创建一个CommandBlockRequest的结构
-	CommandBlock := new(protocol.BlockRequest)
-	CommandBlock.NewObject(task, CommandBlock)
-	sendbuff, err := CommandBlock.EncodeBody(CommandBlock)
-	if err != nil {
-		fmt.Println("Sorry!,The CommandBlock EncodeBody error")
-		os.Exit(-1)
-	}
-	fmt.Println(sendbuff)
-	fmt.Println("start to send")
-	conn.Write(sendbuff)
-
-	/* objects, _ := CommandBlock.DecodeBody(sendbuff)
-	fmt.Println(objects) */
-
-	//创建一个缓冲区，用于存放服务器发送来的数据
-	blockbuff := make([]byte, 512)
-	var Response *(protocol.BlockResponse)
+	//创建一个缓冲区，用于存放服务器发送来的消息
+	recvBuff := make([]byte, 1024)
+	dataBuff := bytes.NewBuffer([]byte{})
+	//databuff := make([]byte, protocol.MAXDATA)
 	// start to get date frmo server
 	for {
-		_, err = conn.Read(blockbuff)
+		lengthSize, err := conn.Read(recvBuff)
+		fmt.Println("recvBuff and lengthSize", recvBuff, lengthSize)
+		t := recvBuff[0:lengthSize]
+		dataBuff.Write(t)
+		fmt.Println("databuff ", dataBuff.Bytes(), dataBuff.Len())
+		if lengthSize == 0 {
+			break
+		}
 		if err != nil {
 			fmt.Println("Sorry! read error")
 			os.Exit(-1)
 		}
-		fmt.Println("read sucess ", blockbuff)
-		if len(blockbuff) < 4 {
+		if (dataBuff.Len()) < 4 {
 			continue
 		}
 		//解析长度
-		bodylength, err1 := GetBodyLength(blockbuff)
-		if err1 != nil {
+		bodyLength, err := GetBodyLength(dataBuff.Bytes())
+		fmt.Println("bodyLength valus", bodyLength)
+		if err != nil {
 			fmt.Println("sorry ! to read body length error!")
 			os.Exit(-1)
 		}
-		if bodylength > (uint16)(len(blockbuff)-4) {
+		if bodyLength > (uint16)((dataBuff.Len())-4) {
 			continue
 		}
-		fmt.Println("bodylength ", bodylength)
 		//解析类型
-		var commandtype uint8
-		message := blockbuff[0:(4 + bodylength)]
-		fmt.Println("message ", message)
-		commandtype, err = GetCommandType(message)
+		var commandID uint8
+		commandID, err = GetCommandID(dataBuff.Bytes())
 		if err != nil {
 			fmt.Println("Sorry ! binary convert error")
 			os.Exit(-1)
 		}
-		comtype := fmt.Sprintf("%x", commandtype)
-		fmt.Println("comtype ", comtype)
-		switch comtype {
-		case "07":
+		fmt.Println("commandtype ", commandID)
+		// 选择类型
+		switch commandID {
+		case protocol.CommandFin1:
 			fmt.Println("sorry! no have the file")
-			fin := new(protocol.CommandFin)
-			*fin, err = fin.DecodeBody(message)
+			fin := protocol.NewFinObject()
+			fin, err := fin.DecodeBody(dataBuff)
 			if err != nil {
 				fmt.Println("sorry ! Fin Decode error")
 				continue
@@ -109,41 +135,58 @@ func Run(task *platinumc.Task) {
 				fmt.Println("erron is:", fin.ErrorCode)
 				os.Exit(-1)
 			}
-		case "31":
-			Response = new(protocol.BlockResponse)
-			*Response, err = Response.DecodeBody(message)
+		case protocol.CommandBlockResponse:
+			Response := protocol.NewBlockResponse()
+			Response, err := Response.DecodeBody(dataBuff)
 			if err != nil {
 				fmt.Println("sorry ! Response Decode error")
-				continue
-			} else {
-				blockbuff = blockbuff[(4+bodylength)+1:]
-				fmt.Println(len(blockbuff), cap(blockbuff))
+				os.Exit(-1)
 			}
+			fmt.Printf("[S2C BlockResponse] Fileindex:%s Offset:%v FileSize:%v LastModified:%v\n",
+				Response.FileIndex, Response.FileSize, Response.FileOffset, Response.FilelastModified)
+			err = SendPieceRequest(task, 0, conn)
+			if err != nil {
+				fmt.Printf("call SendPieceRequest failed: %v\n", err)
+			}
+		case protocol.CommandPieceResponse:
+			pieceResponse := protocol.NewPieceResponse()
+			pieceResponse, err = pieceResponse.DecodeBody(dataBuff)
+			if err != nil {
+				fmt.Println("sorry ! the pieceresponse decode error")
+				os.Exit(-1)
+			}
+			fmt.Printf("PieceData %s \n", pieceResponse.PieceData)
 		}
-		break
-	} //跳出for循环。说明服务器有这个数据
-	fmt.Println("the file exits", *Response)
 
-	//建一个Piece结构体 要开始接收数据了
-	piecebuff := make([]byte, 1024)
-	piecereq := new(protocol.PieceRequest)
-	piecereq.NewObject(task, piecereq)
-	sedbuff, err3 := piecereq.EncodeBody(piecereq)
-	if err3 != nil {
-		fmt.Println("Sorry ! the piece encode error")
-		os.Exit(-1)
+		//fmt.Println("file ")
+
 	}
-	conn.Write(sedbuff)
-	//接收数据
-	conn.Read(piecebuff)
-	fmt.Println("piece buff", piecebuff)
-	fmt.Println(len(piecebuff))
-	/* pieceres := new(protocol.PieceResponse)
-	*pieceres, err = pieceres.DecodeBody(piecebuff)
-
-	fmt.Printf("%s", pieceres.PieceData) */
-
 }
+
+//跳出for循环。说明服务器有这个数据
+/* fmt.Println("the file exits", *Response)
+
+//建一个Piece结构体 要开始接收数据了
+//piecebuff := make([]byte, 5048)
+piecereq := new(protocol.PieceRequest)
+piecereq.NewObject(task, piecereq)
+sedbuff, err3 := piecereq.EncodeBody(piecereq)
+if err3 != nil {
+	fmt.Println("Sorry ! the piece encode error")
+	os.Exit(-1)
+}
+conn.Write(sedbuff)
+//接收数据
+piecebuff := make([]byte, 18000)
+fmt.Println("!!!!!!!!!!!!!!!!!!!!!!!")
+count, _ := conn.Read(piecebuff)
+fmt.Println("count", count)
+fmt.Println("piece buff", piecebuff)
+fmt.Println(len(piecebuff))
+*/
+/* pieceres := new(protocol.PieceResponse)
+*pieceres, err = pieceres.DecodeBody(piecebuff)
+fmt.Printf("%s", pieceres.PieceData) */
 
 //转换成二进制 然后发送给服务器
 /* 	var message protocol.BlockRequest
@@ -154,7 +197,6 @@ if err != nil {
 	os.Exit(-1)
 }
 fmt.Println(buf)
-
 //buff := make([]byte, 0)
 //fmt.Println(buff)
 // 循环去接收服务器发送来的数据
@@ -177,6 +219,5 @@ if data.FileSize != 0 {
 } else {
 	fmt.Println("file download sucess")
 	break
-
 }
 */

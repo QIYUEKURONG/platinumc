@@ -3,6 +3,9 @@ package protocol
 // ProtocolVersion Version.
 const ProtocolVersion = 1
 
+//MAXDATA record max transport data length
+const MAXDATA = 8192
+
 // Command Type
 const (
 	// CommandUnknown is command id for unknown type

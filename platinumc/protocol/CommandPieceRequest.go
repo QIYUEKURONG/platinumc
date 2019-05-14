@@ -13,12 +13,19 @@ type PieceRequest struct {
 	PiecenIndex uint32
 }
 
-//NewObject can create a new object
-func (p *PieceRequest) NewObject(task *platinumc.Task, message *PieceRequest) {
-	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 0x32
-	message.Head.BodyLength = p.GetBodyLength()
-	message.PiecenIndex = (uint32)(task.StartPieceIndex)
+//NewPieceRequest can create a new object
+func NewPieceRequest(t *platinumc.Task, index uint32) *PieceRequest {
+
+	br := &PieceRequest{}
+	if index == 0 {
+		br.PiecenIndex = (uint32)(t.StartPieceIndex)
+	} else {
+		br.PiecenIndex = index
+	}
+	br.Head.ProtocolVersion = ProtocolVersion
+	br.Head.CommandID = 0x32
+	br.Head.BodyLength = br.GetBodyLength()
+	return br
 }
 
 // GetBodyLength can return value of bodylength
@@ -26,23 +33,23 @@ func (p *PieceRequest) GetBodyLength() uint16 {
 	return (uint16)(4)
 }
 
-// EncodeBody can encode client message to binary
-func (p *PieceRequest) EncodeBody(message *PieceRequest) ([]byte, error) {
+// Encode can encode client message to binary
+func (p *PieceRequest) Encode() ([]byte, error) {
 	buff := new(bytes.Buffer)
 	var err error
-	err = binary.Write(buff, binary.BigEndian, message.Head.ProtocolVersion)
+	err = binary.Write(buff, binary.BigEndian, p.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.CommandID)
+	err = binary.Write(buff, binary.BigEndian, p.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.BodyLength)
+	err = binary.Write(buff, binary.BigEndian, p.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.PiecenIndex)
+	err = binary.Write(buff, binary.BigEndian, p.PiecenIndex)
 	if err != nil {
 		return nil, err
 	}

@@ -66,43 +66,38 @@ func (p *PieceResponse) EncodeBody() ([]byte, error) {
 
 // DecodeBody can decode binary code to struct
 func (p *PieceResponse) DecodeBody(buff *bytes.Buffer) (*PieceResponse, error) {
-	var piece PieceResponse
 	//buff := bytes.NewBuffer(buf)
 	var err error
-	err = binary.Read(buff, binary.BigEndian, &piece.Head.ProtocolVersion)
+	err = binary.Read(buff, binary.BigEndian, &p.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &piece.Head.CommandID)
+	err = binary.Read(buff, binary.BigEndian, &p.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &piece.Head.BodyLength)
+	err = binary.Read(buff, binary.BigEndian, &p.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &piece.PiceeIndex)
+	err = binary.Read(buff, binary.BigEndian, &p.PiceeIndex)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &piece.PieceHash)
+	err = binary.Read(buff, binary.BigEndian, &p.PieceHash)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &piece.PieceSize)
+	err = binary.Read(buff, binary.BigEndian, &p.PieceSize)
 	if err != nil {
 		return nil, err
 	}
-	var datalen uint32
-	err = binary.Read(buff, binary.BigEndian, &datalen)
-	if err != nil {
-		return nil, err
-	}
-	valuedata := make([]byte, datalen)
+
+	valuedata := make([]byte, p.Head.BodyLength-12)
 	err = binary.Read(buff, binary.BigEndian, &valuedata)
 	if err != nil {
 		return nil, err
 	}
-	piece.PieceData = string(valuedata)
+	p.PieceData = string(valuedata)
 	return p, nil
 }

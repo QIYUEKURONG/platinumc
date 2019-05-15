@@ -28,7 +28,7 @@ func (f *CommandFin) GetBodyLength() uint16 {
 }
 
 // EncodeBody can encode client message to binary
-func (f *CommandFin) EncodeBody() ([]byte, error) {
+func (f *CommandFin) Encode() ([]byte, error) {
 	buff := new(bytes.Buffer)
 	var err error
 	err = binary.Write(buff, binary.BigEndian, f.Head.ProtocolVersion)

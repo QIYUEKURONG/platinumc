@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/QIYUEKURONG/platinumc/platinumc/protocol"
+	"github.com/QIYUEKURONG/platinumc/protocol"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -89,9 +89,6 @@ func TestCommandType(t *testing.T) {
 	}
 }
 
-func TestReturnLocalTime(t *testing.T)
+func TestReturnLocalTime(t *testing.T) {
 
-	t:=ReturnLocalTime()
-
-	
-{}
+}

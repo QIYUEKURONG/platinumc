@@ -88,3 +88,10 @@ func TestCommandType(t *testing.T) {
 		fmt.Println("testing passing")
 	}
 }
+
+func TestReturnLocalTime(t *testing.T)
+
+	t:=ReturnLocalTime()
+
+	
+{}

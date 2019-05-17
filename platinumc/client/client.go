@@ -2,105 +2,12 @@ package client
 
 import (
 	"bytes"
-	"encoding/binary"
 	"fmt"
-	"net"
 	"os"
-	"time"
 
 	"github.com/QIYUEKURONG/platinumc/platinumc"
 	"github.com/QIYUEKURONG/platinumc/platinumc/protocol"
 )
-
-// SetLocalTime can return a string of local time
-func SetLocalTime() string {
-
-	year, month, day := time.Now().Date()
-	str := fmt.Sprintf("%d-%d-%d", year, month, day)
-	hour, minute, second := time.Now().Clock()
-	str += fmt.Sprintf("  %d-%d-%d", hour, minute, second)
-	nanoSecond := time.Now().Nanosecond()
-	str += fmt.Sprintf("-%d", nanoSecond)
-	return str
-}
-
-// GetBodyLength function get body length
-func GetBodyLength(buff []byte) (uint16, error) {
-	//解析长度
-	bodylengthbuff := buff[2:4]
-	body := bytes.NewBuffer(bodylengthbuff)
-	var bodylength uint16
-	var err error
-	err = binary.Read(body, binary.BigEndian, &bodylength)
-	return bodylength, err
-}
-
-// GetCommandID function get  object type
-func GetCommandID(buff []byte) (uint8, error) {
-	commandid := buff[1:2]
-	id := bytes.NewBuffer(commandid)
-	var commandtype uint8
-	err := binary.Read(id, binary.BigEndian, &commandtype)
-	return commandtype, err
-}
-
-// SendBlockRequest encode and send BlockRequest to server.
-func SendBlockRequest(task *platinumc.Task, conn net.Conn) error {
-	// 1. 构造
-	br := protocol.NewBlockRequest(task.Identifier, protocol.ClientTypeUnknown, task.FileIndex, 0)
-	// 2. 编码
-	sendBuffer, err := br.Encode()
-	if err != nil {
-		return fmt.Errorf("encode failed: %v", err)
-	}
-	// 3. 发送
-	_, err = conn.Write(sendBuffer)
-	if err != nil {
-		return fmt.Errorf("send failed: %v", err)
-	}
-	str := SetLocalTime()
-	fmt.Printf("[%s] [C2S BlockRequest] FileIndex:%s ClientId:tcp-%s FileOffset:%v\n", str, br.FileIndex, br.ClientID, br.FileOffset)
-	return nil
-}
-
-// SendPieceRequest encode and send PieceRequest to server.
-func SendPieceRequest(t *platinumc.Task, index uint32, conn net.Conn) error {
-	// 1: 构造
-	br := protocol.NewPieceRequest(t, index)
-	// 2：编码
-	sendBuffer, err := br.Encode()
-	if err != nil {
-		return fmt.Errorf("encode failed: %v", err)
-	}
-	// 3:发送
-	_, err = conn.Write(sendBuffer)
-	if err != nil {
-		return fmt.Errorf("send failed: %v", err)
-	}
-	str := SetLocalTime()
-	fmt.Printf("[%s] [C2S PieceRequest] Index:%v Offset:%v Length:%v\n", str, index, br.PiecenIndex, 8192)
-
-	return nil
-}
-
-// SendFin encode and send Fin to server
-func SendFin(conn net.Conn) error {
-	// 1:构造
-	br := protocol.NewFinObject()
-	//2：编码
-	sendBuffer, err := br.Encode()
-	if err != nil {
-		return fmt.Errorf("encode failed: %v", err)
-	}
-	//3:发送
-	_, err = conn.Write(sendBuffer)
-	if err != nil {
-		return fmt.Errorf("send failed: %v", err)
-	}
-	str := SetLocalTime()
-	fmt.Printf("[%s] [C2S Fin] Code 53", str)
-	return nil
-}
 
 // Run the client to download file specefied in task.
 func Run(task *platinumc.Task) {
@@ -116,10 +23,17 @@ func Run(task *platinumc.Task) {
 		fmt.Printf("call SendBlockRequest failed: %v\n", err)
 		os.Exit(1)
 	}
-
-	// 去了最后打印做准备
+	//  建立一个文件，存储最后的文件
+	file, err := os.Create("map.mp4")
+	if err != nil {
+		fmt.Println("create a file error")
+		os.Exit(-2)
+	}
+	// 为了最后打印做准备
 	fileName := task.SavePath
 	var fileLength uint64
+	//var startTime int
+	//var endTime int
 	//创建一个缓冲区，用于存放服务器发送来的消息
 	recvBuff := make([]byte, 1024)
 	dataBuff := bytes.NewBuffer([]byte{})
@@ -157,7 +71,6 @@ func Run(task *platinumc.Task) {
 			fmt.Println("Sorry ! binary convert error")
 			os.Exit(-1)
 		}
-		//	fmt.Println("commandtype ", commandID)
 		// 选择类型
 		switch commandID {
 		case protocol.CommandFin1:
@@ -178,7 +91,7 @@ func Run(task *platinumc.Task) {
 				os.Exit(-1)
 			}
 			str := SetLocalTime()
-			fmt.Printf("[%s] [S2C BlockResponse] Fileindex:%s Offset:%v FileSize:%v LastModified:%v\n",
+			fmt.Printf("[%s][S2C BlockResponse] Fileindex:%s Offset:%v FileSize:%v LastModified:%v\n",
 				str, Response.FileIndex, Response.FileSize, Response.FileOffset, Response.FilelastModified)
 			fileLength = Response.FileSize
 			err = SendPieceRequest(task, pieceIndex, conn)
@@ -192,8 +105,10 @@ func Run(task *platinumc.Task) {
 				fmt.Println("sorry ! the pieceresponse decode error")
 				os.Exit(-1)
 			}
+			file.Write(([]byte)(pieceResponse.PieceData))
 			str := SetLocalTime()
-			fmt.Printf("[%s] [S2C pieceResponse] Index:%v  Hash:%v Length:%v\n", str, pieceIndex, pieceResponse.PieceHash, bodyLength-12)
+			fmt.Printf("[%s][S2C pieceResponse] Index:%v  Hash:%v Length:%v\n", str, pieceIndex, pieceResponse.PieceHash, bodyLength-12)
+			fmt.Printf("[%s]PieceIndex:%d finish.\n", str, pieceIndex)
 			pieceIndex++
 			//fmt.Println(pieceResponse)
 			//说明文件已经接收完毕
@@ -209,6 +124,5 @@ func Run(task *platinumc.Task) {
 			err = SendPieceRequest(task, pieceIndex, conn)
 			//fmt.Printf("PieceData %s \n", pieceResponse.PieceData)
 		}
-
 	}
 }

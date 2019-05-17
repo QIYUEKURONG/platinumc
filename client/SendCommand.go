@@ -8,8 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/QIYUEKURONG/platinumc/platinumc"
-	"github.com/QIYUEKURONG/platinumc/platinumc/protocol"
+	"github.com/QIYUEKURONG/platinumc/protocol"
 )
 
 // SetLocalTime can return a string of local time
@@ -45,7 +44,7 @@ func GetCommandID(buff []byte) (uint8, error) {
 }
 
 // SendBlockRequest encode and send BlockRequest to server.
-func SendBlockRequest(task *platinumc.Task, conn net.Conn) error {
+func SendBlockRequest(task *Task, conn net.Conn) error {
 	// 1. 构造
 	br := protocol.NewBlockRequest(task.Identifier, protocol.ClientTypeUnknown, task.FileIndex, 0)
 	// 2. 编码
@@ -64,9 +63,9 @@ func SendBlockRequest(task *platinumc.Task, conn net.Conn) error {
 }
 
 // SendPieceRequest encode and send PieceRequest to server.
-func SendPieceRequest(t *platinumc.Task, index uint32, conn net.Conn) error {
+func SendPieceRequest(t *Task, index uint32, conn net.Conn) error {
 	// 1: 构造
-	br := protocol.NewPieceRequest(t, index)
+	br := protocol.NewPieceRequest(index)
 	// 2：编码
 	sendBuffer, err := br.Encode()
 	if err != nil {

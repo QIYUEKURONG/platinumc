@@ -5,8 +5,6 @@ import (
 	"net"
 	"strconv"
 	"strings"
-
-	"github.com/QIYUEKURONG/platinumc/platinumc"
 )
 
 // ConnectionTCP can record local ip and port and peer ip and port
@@ -23,11 +21,11 @@ type ConnectionTCP struct {
 	ReceiveBuffer []byte
 	ServerAddress string
 
-	Task *platinumc.Task
+	Task *Task
 }
 
 // NewConnectionTCP function can set value for ConnectionTCP struct object
-func NewConnectionTCP(t *platinumc.Task) *ConnectionTCP {
+func NewConnectionTCP(t *Task) *ConnectionTCP {
 	index := strings.Index(t.ServerAddress, ":")
 	ip := t.ServerAddress[0:index]
 	value := t.ServerAddress[index+1 : len(t.ServerAddress)-1]
@@ -46,7 +44,7 @@ func NewConnectionTCP(t *platinumc.Task) *ConnectionTCP {
 func (c *ConnectionTCP) Connect() (net.Conn, error) {
 	conn, err := net.Dial("tcp", c.ServerAddress)
 	if err != nil {
-		return nil, fmt.Errorf("connect err:%v", err)
+		return nil, fmt.Errorf("connect failed: %v", err)
 	}
-	return conn, err
+	return conn, nil
 }

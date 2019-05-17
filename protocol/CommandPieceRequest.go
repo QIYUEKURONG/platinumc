@@ -3,8 +3,6 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
-
-	"github.com/QIYUEKURONG/platinumc/platinumc"
 )
 
 // PieceRequest can tell server the piecenindex
@@ -14,14 +12,9 @@ type PieceRequest struct {
 }
 
 //NewPieceRequest can create a new object
-func NewPieceRequest(t *platinumc.Task, index uint32) *PieceRequest {
-
+func NewPieceRequest(index uint32) *PieceRequest {
 	br := &PieceRequest{}
-	if index == 0 {
-		br.PiecenIndex = (uint32)(t.StartPieceIndex)
-	} else {
-		br.PiecenIndex = index
-	}
+	br.PiecenIndex = index
 	br.Head.ProtocolVersion = ProtocolVersion
 	br.Head.CommandID = 0x32
 	br.Head.BodyLength = br.GetBodyLength()

@@ -40,10 +40,8 @@ func Run(task *platinumc.Task) {
 	var pieceIndex uint32
 	for {
 		lengthSize, err := conn.Read(recvBuff)
-		//fmt.Println("recvBuff and lengthSize", recvBuff, lengthSize)
 		t := recvBuff[0:lengthSize]
 		dataBuff.Write(t)
-		//	fmt.Println("databuff ", dataBuff.Bytes(), dataBuff.Len())
 		if lengthSize == 0 {
 			break
 		}
@@ -110,7 +108,6 @@ func Run(task *platinumc.Task) {
 			fmt.Printf("[%s][S2C pieceResponse] Index:%v  Hash:%v Length:%v\n", str, pieceIndex, pieceResponse.PieceHash, bodyLength-12)
 			fmt.Printf("[%s]PieceIndex:%d finish.\n", str, pieceIndex)
 			pieceIndex++
-			//fmt.Println(pieceResponse)
 			//说明文件已经接收完毕
 			if (bodyLength - 12) < 8192 {
 				fmt.Printf("[%s] Download finish.\n", str)
@@ -122,7 +119,6 @@ func Run(task *platinumc.Task) {
 				break
 			}
 			err = SendPieceRequest(task, pieceIndex, conn)
-			//fmt.Printf("PieceData %s \n", pieceResponse.PieceData)
 		}
 	}
 }

@@ -9,7 +9,7 @@ import (
 // PieceResponse struct record all message of send filee
 type PieceResponse struct {
 	Head       Header
-	PiceeIndex uint32
+	PieceIndex uint32
 	PieceHash  uint32
 	PieceSize  uint32
 	PieceData  string
@@ -42,7 +42,7 @@ func (p *PieceResponse) EncodeBody() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, p.PiceeIndex)
+	err = binary.Write(buff, binary.BigEndian, p.PieceIndex)
 	if err != nil {
 		return nil, err
 	}
@@ -51,10 +51,6 @@ func (p *PieceResponse) EncodeBody() ([]byte, error) {
 		return nil, err
 	}
 	err = binary.Write(buff, binary.BigEndian, p.PieceSize)
-	if err != nil {
-		return nil, err
-	}
-	err = binary.Write(buff, binary.BigEndian, uint32(len(p.PieceData)))
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +77,7 @@ func (p *PieceResponse) DecodeBody(buff *bytes.Buffer) (*PieceResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Read(buff, binary.BigEndian, &p.PiceeIndex)
+	err = binary.Read(buff, binary.BigEndian, &p.PieceIndex)
 	if err != nil {
 		return nil, err
 	}

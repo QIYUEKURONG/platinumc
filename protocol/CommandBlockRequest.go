@@ -106,7 +106,6 @@ func (br *BlockRequest) DecodeBody(buf []byte) (BlockRequest, error) {
 	if err != nil {
 		return block, err
 	}
-
 	valueid := make([]byte, clientidlen)
 	err = binary.Read(buff, binary.BigEndian, &valueid)
 	if err != nil {

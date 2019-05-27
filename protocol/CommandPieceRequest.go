@@ -16,7 +16,7 @@ func NewPieceRequest(index uint32) *PieceRequest {
 	br := &PieceRequest{}
 	br.PiecenIndex = index
 	br.Head.ProtocolVersion = ProtocolVersion
-	br.Head.CommandID = 0x32
+	br.Head.CommandID = CommandPieceRequest
 	br.Head.BodyLength = br.GetBodyLength()
 	return br
 }

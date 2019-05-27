@@ -55,7 +55,6 @@ func (f *CommandFin) DecodeBody(buff *bytes.Buffer) (*CommandFin, error) {
 
 	data := NewFinObject()
 	//buff := bytes.NewBuffer(buf)
-
 	var err error
 	err = binary.Read(buff, binary.BigEndian, &data.Head.ProtocolVersion)
 	if err != nil {

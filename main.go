@@ -12,7 +12,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("parse task failed: %v", err)
 	}
-
 	// 2. 执行下载任务
 	client.Run(task)
 }

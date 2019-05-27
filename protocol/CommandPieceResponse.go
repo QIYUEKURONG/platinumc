@@ -3,6 +3,7 @@ package protocol
 import (
 	"bytes"
 	"encoding/binary"
+	"log"
 )
 
 // PieceResponse struct record all message of send filee
@@ -100,4 +101,9 @@ func (p *PieceResponse) DecodeBody(buff *bytes.Buffer) (*PieceResponse, error) {
 	}
 	p.PieceData = string(valuedata)
 	return p, nil
+}
+
+// PrintfPieceResponse function printf PieceResponse
+func (p *PieceResponse) PrintfPieceResponse(pieceIndex uint32, bodyLength uint16) {
+	log.Printf("[S2C pieceResponse] Index:%v  Hash:%v Length:%v", pieceIndex, p.PieceHash, bodyLength-12)
 }

@@ -36,5 +36,4 @@ func TestCommandFinDecode(t *testing.T) {
 	assert.Equal(b.Head.ProtocolVersion, byte(1), "ProtocolVersion")
 	assert.Equal(b.Head.CommandID, byte(0x7), "CommandID")
 	assert.Equal(b.ErrorCode, byte(0), "ErrorCode")
-
 }

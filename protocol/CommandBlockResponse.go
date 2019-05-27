@@ -106,7 +106,6 @@ func (b *BlockResponse) DecodeBody(buff *bytes.Buffer) (*BlockResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return b, nil
 }
 

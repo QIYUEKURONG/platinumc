@@ -11,12 +11,14 @@ type CommandPing struct {
 	TimeStamp uint64
 }
 
-//NewObject can create a new object
-func (p *CommandPing) NewObject(timestamp uint64, message *CommandPing) {
-	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 0x05
-	message.Head.BodyLength = p.GetBodyLength()
-	message.TimeStamp = timestamp
+//NewPingObject can create a new object
+func NewPingObject(timestamp uint64) *CommandPing {
+	br := &CommandPing{}
+	br.Head.ProtocolVersion = ProtocolVersion
+	br.Head.CommandID = CommandPings
+	br.Head.BodyLength = br.GetBodyLength()
+	br.TimeStamp = timestamp
+	return br
 }
 
 // GetBodyLength get body length
@@ -25,22 +27,22 @@ func (p *CommandPing) GetBodyLength() uint16 {
 }
 
 // EncodeBody can encode client message to binary
-func (p *CommandPing) EncodeBody(message *CommandPing) ([]byte, error) {
+func (p *CommandPing) EncodeBody() ([]byte, error) {
 	buff := new(bytes.Buffer)
 	var err error
-	err = binary.Write(buff, binary.BigEndian, message.Head.ProtocolVersion)
+	err = binary.Write(buff, binary.BigEndian, p.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.CommandID)
+	err = binary.Write(buff, binary.BigEndian, p.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.BodyLength)
+	err = binary.Write(buff, binary.BigEndian, p.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.TimeStamp)
+	err = binary.Write(buff, binary.BigEndian, p.TimeStamp)
 	if err != nil {
 		return nil, err
 	}

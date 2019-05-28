@@ -11,13 +11,14 @@ type PingReply struct {
 	TimeStamp uint64
 }
 
-//NewObject can create a new object
-func (p *PingReply) NewObject(timestamp uint64, message *PingReply) {
-	message.Head.ProtocolVersion = ProtocolVersion
-	message.Head.CommandID = 0x06
-	message.Head.BodyLength = p.GetBodyLength()
-	message.TimeStamp = timestamp
-
+//NewPingReply can create a new object
+func NewPingReply(timestamp uint64) *PingReply {
+	br := &PingReply{}
+	br.Head.ProtocolVersion = ProtocolVersion
+	br.Head.CommandID = 0x06
+	br.Head.BodyLength = br.GetBodyLength()
+	br.TimeStamp = timestamp
+	return br
 }
 
 // GetBodyLength get body length
@@ -26,22 +27,22 @@ func (p *PingReply) GetBodyLength() uint16 {
 }
 
 // EncodeBody can encode client message to binary
-func (p *PingReply) EncodeBody(message *PingReply) ([]byte, error) {
+func (p *PingReply) EncodeBody() ([]byte, error) {
 	buff := new(bytes.Buffer)
 	var err error
-	err = binary.Write(buff, binary.BigEndian, message.Head.ProtocolVersion)
+	err = binary.Write(buff, binary.BigEndian, p.Head.ProtocolVersion)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.CommandID)
+	err = binary.Write(buff, binary.BigEndian, p.Head.CommandID)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.Head.BodyLength)
+	err = binary.Write(buff, binary.BigEndian, p.Head.BodyLength)
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(buff, binary.BigEndian, message.TimeStamp)
+	err = binary.Write(buff, binary.BigEndian, p.TimeStamp)
 	if err != nil {
 		return nil, err
 	}
@@ -49,9 +50,9 @@ func (p *PingReply) EncodeBody(message *PingReply) ([]byte, error) {
 }
 
 // DecodeBody can decode binary code to struct
-func (p *PingReply) DecodeBody(buf []byte) (PingReply, error) {
+func (p *PingReply) DecodeBody(buf []byte) (*PingReply, error) {
 	buff := bytes.NewBuffer(buf)
-	var ping PingReply
+	ping := NewPingReply(0)
 	var err error
 	err = binary.Read(buff, binary.BigEndian, &ping.Head.ProtocolVersion)
 	if err != nil {
